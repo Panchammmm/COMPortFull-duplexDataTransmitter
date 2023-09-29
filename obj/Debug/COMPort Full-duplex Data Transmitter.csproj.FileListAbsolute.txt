@@ -1,0 +1,10 @@
+C:\Users\sarda\OneDrive\Desktop\COMPort Full-duplex Data Transmitter\bin\Debug\COMPort Full-duplex Data Transmitter.exe.config
+C:\Users\sarda\OneDrive\Desktop\COMPort Full-duplex Data Transmitter\bin\Debug\COMPort Full-duplex Data Transmitter.exe
+C:\Users\sarda\OneDrive\Desktop\COMPort Full-duplex Data Transmitter\bin\Debug\COMPort Full-duplex Data Transmitter.pdb
+C:\Users\sarda\OneDrive\Desktop\COMPort Full-duplex Data Transmitter\obj\Debug\COMPort Full-duplex Data Transmitter.csproj.AssemblyReference.cache
+C:\Users\sarda\OneDrive\Desktop\COMPort Full-duplex Data Transmitter\obj\Debug\COMPort_Full_duplex_Data_Transmitter.Form1.resources
+C:\Users\sarda\OneDrive\Desktop\COMPort Full-duplex Data Transmitter\obj\Debug\COMPort_Full_duplex_Data_Transmitter.Properties.Resources.resources
+C:\Users\sarda\OneDrive\Desktop\COMPort Full-duplex Data Transmitter\obj\Debug\COMPort Full-duplex Data Transmitter.csproj.GenerateResource.cache
+C:\Users\sarda\OneDrive\Desktop\COMPort Full-duplex Data Transmitter\obj\Debug\COMPort Full-duplex Data Transmitter.csproj.CoreCompileInputs.cache
+C:\Users\sarda\OneDrive\Desktop\COMPort Full-duplex Data Transmitter\obj\Debug\COMPort Full-duplex Data Transmitter.exe
+C:\Users\sarda\OneDrive\Desktop\COMPort Full-duplex Data Transmitter\obj\Debug\COMPort Full-duplex Data Transmitter.pdb
