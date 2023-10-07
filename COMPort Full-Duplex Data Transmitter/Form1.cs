@@ -15,6 +15,7 @@ namespace COMPort_Full_duplex_Data_Transmitter
         byte[] fileContent;
         string selectedSize;
         int chunkSize;
+        string userSpecifiedFileName;
 
         public Form1()
         {
@@ -22,67 +23,41 @@ namespace COMPort_Full_duplex_Data_Transmitter
 
         }
 
-        enum CommunicationMode
-        {
-            Sender,
-            Receiver
-        }
-
-        private CommunicationMode currentMode = CommunicationMode.Sender;
-
-        private void radioSender_CheckedChanged(object sender, EventArgs e)
-        {
-            if (radioSender.Checked)
-            {
-                currentMode = CommunicationMode.Sender;
-                cBoxChunkSize.Enabled = true;
-                tbxFileName.Enabled = true;
-                btnSendData.Enabled = true;
-                btnBrowse.Enabled = true;
-                //
-                btnReceiveData.Enabled = false;
-                ReceivedFilePathTextBox.Enabled = false;
-                cmbFileType.Enabled = false;
-                InputHere.Enabled = false;
-                // Remove the btnSaveHere_Click event handler when in Sender mode.
-                btnSaveHere.Click -= btnSaveHere_Click;
-            }
-        }
-
-        private void radioReceiver_CheckedChanged(object sender, EventArgs e)
-        {
-            if (radioReceiver.Checked)
-            {
-                currentMode = CommunicationMode.Receiver;
-                btnSendData.Enabled = false;
-                btnBrowse.Enabled = false;
-                cBoxChunkSize.Enabled = false;
-                tbxFileName.Enabled = false;
-                //
-                btnReceiveData.Enabled = true;
-                ReceivedFilePathTextBox.Enabled = true;
-                cmbFileType.Enabled = true;
-                InputHere.Enabled = true;
-                // Add the btnSaveHere_Click event handler when in Receiver mode.
-                btnSaveHere.Click += btnSaveHere_Click;
-            }
-        }
-        
         private void Form1_Load(object sender, EventArgs e)
         {
+            // Disable user input in ComboBoxes by setting the DropDownStyle
+            cBoxComPort.DropDownStyle = ComboBoxStyle.DropDownList;
+            cBoxBaudrate.DropDownStyle = ComboBoxStyle.DropDownList;
+            cBoxDatabit.DropDownStyle = ComboBoxStyle.DropDownList;
+            cBoxStopbit.DropDownStyle = ComboBoxStyle.DropDownList;
+            cBoxParitybit.DropDownStyle = ComboBoxStyle.DropDownList;
+            cBoxChunkSize.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbFileType.DropDownStyle = ComboBoxStyle.DropDownList;
+
             string[] ports = SerialPort.GetPortNames();
             cBoxComPort.Items.AddRange(ports);
+
+            // Make tbxFileName, textBox and ReceivedFilePathTextBox read-only
+            tbxFileName.ReadOnly = true;
+            textBox.ReadOnly = true;
+            ReceivedFilePathTextBox.ReadOnly = true;
         }
+
+        private void SetSerialPortSettings()
+        {
+            serialPort1.PortName = cBoxComPort.Text;
+            serialPort1.BaudRate = Convert.ToInt32(cBoxBaudrate.Text);
+            serialPort1.DataBits = Convert.ToInt32(cBoxDatabit.Text);
+            serialPort1.StopBits = (StopBits)Enum.Parse(typeof(StopBits), cBoxStopbit.Text);
+            serialPort1.Parity = (Parity)Enum.Parse(typeof(Parity), cBoxParitybit.Text);
+        }
+
 
         private async void btnOpen_Click(object sender, EventArgs e)
         {
             try
             {
-                serialPort1.PortName = cBoxComPort.Text;
-                serialPort1.BaudRate = Convert.ToInt32(cBoxBaudrate.Text);
-                serialPort1.DataBits = Convert.ToInt32(cBoxDatabit.Text);
-                serialPort1.StopBits = (StopBits)Enum.Parse(typeof(StopBits), cBoxStopbit.Text);
-                serialPort1.Parity = (Parity)Enum.Parse(typeof(Parity), cBoxParitybit.Text);
+                SetSerialPortSettings();
 
                 // Disable UI elements to prevent user interaction during the operation.
                 btnOpen.Enabled = false;
@@ -253,6 +228,8 @@ namespace COMPort_Full_duplex_Data_Transmitter
             {
                 try
                 {
+                    SetSerialPortSettings();
+
                     // Clear any previous data.
                     receivedDataBuffer.Clear();
                     receivingData = false;
@@ -326,7 +303,7 @@ namespace COMPort_Full_duplex_Data_Transmitter
             }
 
             // Get the user-specified file name from the InputHere TextBox.
-            string userSpecifiedFileName = InputHere.Text.Trim();
+            userSpecifiedFileName = InputHere.Text.Trim();
 
             // Validate the file name.
             if (!IsValidFileName(userSpecifiedFileName))
@@ -341,20 +318,20 @@ namespace COMPort_Full_duplex_Data_Transmitter
 
             try
             {
-                // Combine the user-specified file name with the selected folder path.
-                string receivedFileName = Path.Combine(selectedFolderPath, userSpecifiedFileName);
+                // Generate a unique file name based on the current timestamp and file extension.
+                string ReceivedFileName = Path.Combine(selectedFolderPath, userSpecifiedFileName + fileExtension);
 
-                // Save the received data to the selected directory with the user-specified file name.
-                File.WriteAllBytes(receivedFileName, receivedDataBuffer.ToArray());
+                // Save the received data to the selected directory with the generated file name.
+                File.WriteAllBytes(ReceivedFileName, receivedDataBuffer.ToArray());
 
                 // Update the ReceivedFilePathTextBox with the received file path.
-                ReceivedFilePathTextBox.Text = receivedFileName;
+                ReceivedFilePathTextBox.Text = ReceivedFileName;
 
                 // Update the UI to indicate successful reception and file saving.
                 this.Invoke((MethodInvoker)delegate
                 {
-                    textBox.Text = "•Data received successfully! 😎 " +
-                        $"Data saved as {receivedFileName}";
+                    textBox.Text = "•😎 " +
+                        $"Data saved as {ReceivedFileName}";
                     textBox.ForeColor = Color.Green;
                 });
             }
@@ -363,20 +340,20 @@ namespace COMPort_Full_duplex_Data_Transmitter
                 // Handle any errors that may occur during the file saving process.
                 this.Invoke((MethodInvoker)delegate
                 {
-                    textBox.Text = "•Error saving data: 😭" + ex.Message;
+                    textBox.Text = "•Error saving file: 😭" + ex.Message;
                     textBox.ForeColor = Color.Red;
                 });
             }
         }
 
-
-
         // Declare selectedFolderPath at the class level
         private string selectedFolderPath;
 
+        string fileExtension;
+
         private void btnSaveHere_Click(object sender, EventArgs e)
         {
-            
+
             // Show the folder browser dialog to allow the user to choose a directory.
             using (FolderBrowserDialog folderBrowser = new FolderBrowserDialog())
             {
@@ -389,7 +366,7 @@ namespace COMPort_Full_duplex_Data_Transmitter
                     {
                         try
                         {
-                            string fileExtension = "";
+                            fileExtension = "";
 
                             // Determine the file extension based on the user's selection.
                             string fileType = cmbFileType.SelectedItem.ToString();
@@ -413,22 +390,6 @@ namespace COMPort_Full_duplex_Data_Transmitter
                                     return;
                             }
 
-                            // Generate a unique file name based on the current timestamp and file extension.
-                            string receivedFileName = Path.Combine(selectedFolderPath, $"received_data_{DateTime.Now:yyyyMMddHHmmss}{fileExtension}");
-
-                            // Save the received data to the selected directory with the generated file name.
-                            File.WriteAllBytes(receivedFileName, receivedDataBuffer.ToArray());
-
-                            // Update the ReceivedFilePathTextBox with the received file path.
-                            ReceivedFilePathTextBox.Text = receivedFileName;
-
-                            // Update the UI to indicate successful reception and file saving.
-                            this.Invoke((MethodInvoker)delegate
-                            {
-                                textBox.Text = "•Data received successfully! 😎 " +
-                                    $"Data saved as {receivedFileName}";
-                                textBox.ForeColor = Color.Green;
-                            });
                         }
                         catch (UnauthorizedAccessException ex)
                         {
@@ -450,9 +411,7 @@ namespace COMPort_Full_duplex_Data_Transmitter
             }
         }
 
-//
-//
+
     }
-//
 }
 // <-- End 😎
