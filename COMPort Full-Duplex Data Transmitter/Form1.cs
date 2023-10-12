@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.IO.Ports;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -14,7 +15,6 @@ namespace COMPort_Full_duplex_Data_Transmitter
     {
         byte[] fileContent;
         string selectedSize;
-        int chunkSize;
         string userSpecifiedFileName;
 
         public Form1()
@@ -85,6 +85,10 @@ namespace COMPort_Full_duplex_Data_Transmitter
             }
         }
 
+        //
+        // <-- Sender Mode Start
+        //
+
         private void btnBrowse_Click(object sender, EventArgs e)
         {
             textBox.Text = "";
@@ -98,10 +102,11 @@ namespace COMPort_Full_duplex_Data_Transmitter
                 string filePath = openFileDialog.FileName;
                 tbxFileName.Text = openFileDialog.FileName;
 
+                // Call the GetFileType method to determine the file type.
+                string fileType = GetFileType(filePath);
+
                 try
                 {
-                    fileContent = LoadFileIntoByteArray(filePath);
-
                     if (fileContent != null)
                     {
                         // Successfully loaded the file into the byte array.
@@ -115,28 +120,155 @@ namespace COMPort_Full_duplex_Data_Transmitter
             }
         }
 
-        private byte[] LoadFileIntoByteArray(string filePath)
+        private string GetFileType(string filePath)
         {
+            string fileExtension = Path.GetExtension(filePath);
+
+            if (string.IsNullOrEmpty(fileExtension))
+            {
+                return "Unknown";
+            }
+
+            fileExtension = fileExtension.ToLower();
+
+            if (fileExtension == ".txt" || fileExtension == ".doc" || fileExtension == ".docx")
+            {
+                // Call the EncodeTextOrDocFile function for text, .doc, or .docx files.
+                byte[] encodedData = EncodeTextOrDocFile(filePath, fileExtension);
+                return "Text";
+            }
+
+            else if (fileExtension == ".mp3" || fileExtension == ".wav" || fileExtension == ".ogg")
+            {
+                fileContent = EncodeAudio(fileContent, fileExtension);
+                return "Audio";
+            }
+
+            else if (fileExtension == ".jpg" || fileExtension == ".jpeg" || fileExtension == ".png")
+            {
+                fileContent = EncodeImage(fileContent, fileExtension);
+                return "Image";
+            }
+
+            else if (fileExtension == ".mp4" || fileExtension == ".avi" || fileExtension == ".mov")
+            {
+                fileContent = EncodeVideo(fileContent, fileExtension);
+                return "Video";
+            }
+
+            else if (fileExtension == ".pdf" || fileExtension == ".xls" || fileExtension == ".xlsx")
+            {
+                fileContent = EncodeDocument(fileContent, fileExtension);
+                return "Document";
+            }
+
+            else if (fileExtension == ".zip" || fileExtension == ".rar")
+            {
+                fileContent = CompressFile(fileContent, fileExtension);
+                return "Compressed";
+            }
+
+            else if (fileExtension == ".csv" || fileExtension == ".tsv")
+            {
+                return "Spreadsheet";
+            }
+            else if (fileExtension == ".ppt" || fileExtension == ".pptx")
+            {
+                return "Presentation";
+            }
+            // You can continue adding more extensions for different types.
+            else
+            {
+                return "Unknown";
+            }
+        }
+
+        private byte[] EncodeTextOrDocFile(string filePath, string fileExtension)
+        {
+            // Check if the file exists.
+            if (!File.Exists(filePath))
+            {
+                return null;
+            }
+
             try
             {
-                if (File.Exists(filePath))
+                // Initialize a variable to hold the encoded data.
+                byte[] encodedData = null;
+
+                // Check the file extension to determine the encoding logic.
+                if (fileExtension == ".txt" || fileExtension == ".doc" || fileExtension == ".docx")
                 {
-                    fileContent = File.ReadAllBytes(filePath);
-                    return fileContent;
+                    // Encoding logic for text or document files can be implemented here.
+                    // For example, you can use UTF-8 encoding for text files.
+                    // For .doc and .docx files, you might need to use specialized libraries to read and encode them.
+
+                    // In this example, we use UTF-8 encoding for text files.
+                    if (fileExtension == ".txt")
+                    {
+                        // Read the text from the file using UTF-8 encoding.
+                        string text = File.ReadAllText(filePath, Encoding.UTF8);
+
+                        // Convert the text to a byte array using UTF-8 encoding.
+                        encodedData = Encoding.UTF8.GetBytes(text);
+                    }
+                    // Add additional logic for .doc and .docx files if needed.
                 }
                 else
                 {
-                    MessageBox.Show("The selected file does not exist 🤦‍♂️", "File Not Found 🤦‍♀️", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    textBox.ForeColor = Color.Red;
-                    return null;
+                    // Handle unsupported file types or provide specific encoding logic for other extensions.
+                    Console.WriteLine("Unsupported file type: " + fileExtension);
+                    // You may choose to return null or handle it differently based on your requirements.
                 }
+
+                return encodedData;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error reading the file: {ex.Message} 😝", "Error 😪", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                textBox.ForeColor = Color.Red;
+                // Handle any errors that may occur during encoding.
+                Console.WriteLine("Error encoding file: " + ex.Message);
                 return null;
             }
+        }
+
+        private byte[] EncodeAudio(byte[] fileContent, string fileExtension)
+        {
+            // Your audio encoding logic here.
+            // Replace this comment with your actual encoding code.
+            // You may use libraries or methods specific to audio encoding.
+            return fileContent; // For demonstration, just returning the original content.
+        }
+
+        private byte[] EncodeImage(byte[] fileContent, string fileExtension)
+        {
+            // Your image encoding logic here.
+            // Replace this comment with your actual encoding code.
+            // You may use libraries or methods specific to image encoding.
+            return fileContent; // For demonstration, just returning the original content.
+        }
+
+        private byte[] EncodeVideo(byte[] fileContent, string fileExtension)
+        {
+            // Your video encoding logic here.
+            // Replace this comment with your actual encoding code.
+            // You may use libraries or methods specific to video encoding.
+            return fileContent; // For demonstration, just returning the original content.
+        }
+
+        private byte[] EncodeDocument(byte[] fileContent, string fileExtension)
+        {
+            // Your document encoding logic here.
+            // Replace this comment with your actual encoding code.
+            // You may use libraries or methods specific to document encoding.
+            return fileContent; // For demonstration, just returning the original content.
+        }
+
+        private byte[] CompressFile(byte[] fileContent, string fileExtension)
+        {
+            // Your compression logic here.
+            // Replace this comment with your actual compression code.
+            // You may use libraries or methods specific to file compression.
+            return fileContent; // For demonstration, just returning the original content.
         }
 
         private async void btnSendData_Click(object sender, EventArgs e)
