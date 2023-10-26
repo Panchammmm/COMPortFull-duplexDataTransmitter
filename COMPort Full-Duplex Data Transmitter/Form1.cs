@@ -7,6 +7,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using NPOI.XWPF.UserModel; // For .docx files
+using NPOI.HWPF.UserModel; // For .doc files
+using NPOI.POIFS.FileSystem;
+using NPOI.HWPF.Extractor;
+using NPOI.HWPF;
 //
 
 namespace COMPort_Full_duplex_Data_Transmitter
@@ -168,15 +173,18 @@ namespace COMPort_Full_duplex_Data_Transmitter
                 return "Compressed";
             }
 
-            else if (fileExtension == ".csv" || fileExtension == ".tsv")
+            if (fileExtension == ".csv" || fileExtension == ".tsv")
             {
-                return "Spreadsheet";
+                string fileType = EncodeCsvOrTsvFile(fileContent, fileExtension);
+                return fileType;
             }
-            else if (fileExtension == ".ppt" || fileExtension == ".pptx")
+
+            if (fileExtension == ".ppt" || fileExtension == ".pptx")
             {
-                return "Presentation";
+                string fileType = EncodePresentationFile(fileContent);
+                return fileType;
             }
-            // You can continue adding more extensions for different types.
+
             else
             {
                 return "Unknown";
@@ -196,29 +204,43 @@ namespace COMPort_Full_duplex_Data_Transmitter
                 // Initialize a variable to hold the encoded data.
                 byte[] encodedData = null;
 
-                // Check the file extension to determine the encoding logic.
-                if (fileExtension == ".txt" || fileExtension == ".doc" || fileExtension == ".docx")
+                if (fileExtension == ".txt")
                 {
-                    // Encoding logic for text or document files can be implemented here.
-                    // For example, you can use UTF-8 encoding for text files.
-                    // For .doc and .docx files, you might need to use specialized libraries to read and encode them.
+                    // Encoding logic for text files (e.g., .txt)
+                    // Read the text from the file using UTF-8 encoding.
+                    string text = File.ReadAllText(filePath, Encoding.UTF8);
 
-                    // In this example, we use UTF-8 encoding for text files.
-                    if (fileExtension == ".txt")
+                    // Convert the text to a byte array using UTF-8 encoding.
+                    encodedData = Encoding.UTF8.GetBytes(text);
+                }
+                else if (fileExtension == ".docx")
+                {
+                    // Encoding logic for .docx files
+                    using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
                     {
-                        // Read the text from the file using UTF-8 encoding.
-                        string text = File.ReadAllText(filePath, Encoding.UTF8);
-
-                        // Convert the text to a byte array using UTF-8 encoding.
-                        encodedData = Encoding.UTF8.GetBytes(text);
+                        XWPFDocument document = new XWPFDocument(fileStream);
+                        using (MemoryStream memStream = new MemoryStream())
+                        {
+                            document.Write(memStream);
+                            encodedData = memStream.ToArray();
+                        }
                     }
-                    // Add additional logic for .doc and .docx files if needed.
+                }
+                else if (fileExtension == ".doc")
+                {
+                    // Encoding logic for .doc files
+                    using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                    {
+                        HWPFDocument document = new HWPFDocument(fileStream);
+                        WordExtractor wordExtractor = new WordExtractor(document);
+                        string text = string.Join("\n", wordExtractor.Text);
+                        encodedData = Encoding.Default.GetBytes(text);
+                    }
                 }
                 else
                 {
                     // Handle unsupported file types or provide specific encoding logic for other extensions.
                     Console.WriteLine("Unsupported file type: " + fileExtension);
-                    // You may choose to return null or handle it differently based on your requirements.
                 }
 
                 return encodedData;
@@ -269,6 +291,42 @@ namespace COMPort_Full_duplex_Data_Transmitter
             // Replace this comment with your actual compression code.
             // You may use libraries or methods specific to file compression.
             return fileContent; // For demonstration, just returning the original content.
+        }
+
+        private string EncodeCsvOrTsvFile(byte[] fileContent, string fileExtension)
+        {
+            if (fileExtension == ".csv")
+            {
+                // Encoding logic for CSV files (Comma-Separated Values) goes here.
+                // You can implement logic to handle CSV files.
+                // For example, you can parse and process the CSV content.
+
+                // Return the file type.
+                return "CSV";
+            }
+            else if (fileExtension == ".tsv")
+            {
+                // Encoding logic for TSV files (Tab-Separated Values) goes here.
+                // You can implement logic to handle TSV files.
+                // For example, you can parse and process the TSV content.
+
+                // Return the file type.
+                return "TSV";
+            }
+
+            // If the fileExtension is neither .csv nor .tsv, you can handle it accordingly.
+            return "Unknown";
+        }
+
+        private string EncodePresentationFile(byte[] fileContent)
+        {
+            // Encoding logic for PowerPoint presentation files goes here.
+            // You can implement logic to handle .ppt and .pptx files.
+
+            // For example, you can check the fileContent or perform encoding tasks specific to presentations.
+
+            // Return the file type.
+            return "Presentation";
         }
 
         private async void btnSendData_Click(object sender, EventArgs e)

@@ -430,7 +430,7 @@
             this.textBox.Name = "textBox";
             this.textBox.Size = new System.Drawing.Size(483, 233);
             this.textBox.TabIndex = 7;
-            this.textBox.Text = "";
+            this.textBox.Text = " ";
             // 
             // btnReceiveData
             // 
