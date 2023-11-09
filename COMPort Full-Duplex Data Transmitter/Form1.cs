@@ -7,11 +7,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using NPOI.XWPF.UserModel; // For .docx files
-using NPOI.HWPF.UserModel; // For .doc files
-using NPOI.POIFS.FileSystem;
-using NPOI.HWPF.Extractor;
-using NPOI.HWPF;
+using NPOI.XWPF.UserModel;
+using iTextSharp.text.pdf;
+using Document = iTextSharp.text.Document;
+
 //
 
 namespace COMPort_Full_duplex_Data_Transmitter
@@ -136,16 +135,21 @@ namespace COMPort_Full_duplex_Data_Transmitter
 
             fileExtension = fileExtension.ToLower();
 
-            if (fileExtension == ".txt" || fileExtension == ".doc" || fileExtension == ".docx")
+            if (fileExtension == ".txt" || fileExtension == ".docx" || fileExtension == ".doc")
             {
                 // Call the EncodeTextOrDocFile function for text, .doc, or .docx files.
                 byte[] encodedData = EncodeTextOrDocFile(filePath, fileExtension);
                 return "Text";
             }
 
-            else if (fileExtension == ".mp3" || fileExtension == ".wav" || fileExtension == ".ogg")
+            else if (fileExtension == ".pdf")
             {
-                fileContent = EncodeAudio(fileContent, fileExtension);
+                fileContent = EncodeDocument(fileContent, fileExtension);
+                return "Document";
+            }
+
+            else if (fileExtension == ".mp3" || fileExtension == ".wav" || fileExtension == ".au" || fileExtension == ".aiff")
+            {
                 return "Audio";
             }
 
@@ -161,36 +165,13 @@ namespace COMPort_Full_duplex_Data_Transmitter
                 return "Video";
             }
 
-            else if (fileExtension == ".pdf" || fileExtension == ".xls" || fileExtension == ".xlsx")
-            {
-                fileContent = EncodeDocument(fileContent, fileExtension);
-                return "Document";
-            }
-
-            else if (fileExtension == ".zip" || fileExtension == ".rar")
-            {
-                fileContent = CompressFile(fileContent, fileExtension);
-                return "Compressed";
-            }
-
-            if (fileExtension == ".csv" || fileExtension == ".tsv")
-            {
-                string fileType = EncodeCsvOrTsvFile(fileContent, fileExtension);
-                return fileType;
-            }
-
-            if (fileExtension == ".ppt" || fileExtension == ".pptx")
-            {
-                string fileType = EncodePresentationFile(fileContent);
-                return fileType;
-            }
-
             else
             {
                 return "Unknown";
             }
         }
 
+        // Encoding Method of Text File
         private byte[] EncodeTextOrDocFile(string filePath, string fileExtension)
         {
             // Check if the file exists.
@@ -213,7 +194,7 @@ namespace COMPort_Full_duplex_Data_Transmitter
                     // Convert the text to a byte array using UTF-8 encoding.
                     encodedData = Encoding.UTF8.GetBytes(text);
                 }
-                else if (fileExtension == ".docx")
+                else if (fileExtension == ".docx" || fileExtension == ".doc")
                 {
                     // Encoding logic for .docx files
                     using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
@@ -224,17 +205,6 @@ namespace COMPort_Full_duplex_Data_Transmitter
                             document.Write(memStream);
                             encodedData = memStream.ToArray();
                         }
-                    }
-                }
-                else if (fileExtension == ".doc")
-                {
-                    // Encoding logic for .doc files
-                    using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
-                    {
-                        HWPFDocument document = new HWPFDocument(fileStream);
-                        WordExtractor wordExtractor = new WordExtractor(document);
-                        string text = string.Join("\n", wordExtractor.Text);
-                        encodedData = Encoding.Default.GetBytes(text);
                     }
                 }
                 else
@@ -251,6 +221,41 @@ namespace COMPort_Full_duplex_Data_Transmitter
                 Console.WriteLine("Error encoding file: " + ex.Message);
                 return null;
             }
+        }
+        //End
+
+        private byte[] EncodeDocument(byte[] fileContent, string fileExtension)
+        {
+            if (fileExtension.ToLower() == ".pdf")
+            {
+                try
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        Document doc = new Document();
+                        PdfWriter writer = PdfWriter.GetInstance(doc, ms);
+                        doc.Open();
+
+                        // Create a new page
+                        doc.NewPage();
+
+                        PdfContentByte cb = writer.DirectContent;
+                        cb.WriteBytes(fileContent);
+
+                        doc.Close();
+
+                        return ms.ToArray();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Handle any errors that may occur during PDF encoding.
+                    Console.WriteLine("Error encoding PDF: " + ex.Message);
+                }
+            }
+
+            // If the file is not a PDF, just return the original content.
+            return fileContent;
         }
 
         private byte[] EncodeAudio(byte[] fileContent, string fileExtension)
@@ -275,58 +280,6 @@ namespace COMPort_Full_duplex_Data_Transmitter
             // Replace this comment with your actual encoding code.
             // You may use libraries or methods specific to video encoding.
             return fileContent; // For demonstration, just returning the original content.
-        }
-
-        private byte[] EncodeDocument(byte[] fileContent, string fileExtension)
-        {
-            // Your document encoding logic here.
-            // Replace this comment with your actual encoding code.
-            // You may use libraries or methods specific to document encoding.
-            return fileContent; // For demonstration, just returning the original content.
-        }
-
-        private byte[] CompressFile(byte[] fileContent, string fileExtension)
-        {
-            // Your compression logic here.
-            // Replace this comment with your actual compression code.
-            // You may use libraries or methods specific to file compression.
-            return fileContent; // For demonstration, just returning the original content.
-        }
-
-        private string EncodeCsvOrTsvFile(byte[] fileContent, string fileExtension)
-        {
-            if (fileExtension == ".csv")
-            {
-                // Encoding logic for CSV files (Comma-Separated Values) goes here.
-                // You can implement logic to handle CSV files.
-                // For example, you can parse and process the CSV content.
-
-                // Return the file type.
-                return "CSV";
-            }
-            else if (fileExtension == ".tsv")
-            {
-                // Encoding logic for TSV files (Tab-Separated Values) goes here.
-                // You can implement logic to handle TSV files.
-                // For example, you can parse and process the TSV content.
-
-                // Return the file type.
-                return "TSV";
-            }
-
-            // If the fileExtension is neither .csv nor .tsv, you can handle it accordingly.
-            return "Unknown";
-        }
-
-        private string EncodePresentationFile(byte[] fileContent)
-        {
-            // Encoding logic for PowerPoint presentation files goes here.
-            // You can implement logic to handle .ppt and .pptx files.
-
-            // For example, you can check the fileContent or perform encoding tasks specific to presentations.
-
-            // Return the file type.
-            return "Presentation";
         }
 
         private async void btnSendData_Click(object sender, EventArgs e)
