@@ -8,9 +8,11 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using NPOI.XWPF.UserModel;
-using iTextSharp.text.pdf;
-using Document = iTextSharp.text.Document;
-
+using NPOI.HWPF; 
+using NAudio.Wave;
+using NAudio.Lame;
+using System.Drawing.Imaging;
+using Encoder = System.Drawing.Imaging.Encoder;
 //
 
 namespace COMPort_Full_duplex_Data_Transmitter
@@ -90,7 +92,7 @@ namespace COMPort_Full_duplex_Data_Transmitter
         }
 
         //
-        // <-- Sender Mode Start
+        // <-- Sender Mode Start _________________________________________________________
         //
 
         private void btnBrowse_Click(object sender, EventArgs e)
@@ -135,31 +137,46 @@ namespace COMPort_Full_duplex_Data_Transmitter
 
             fileExtension = fileExtension.ToLower();
 
+            // if TEXT file
             if (fileExtension == ".txt" || fileExtension == ".docx" || fileExtension == ".doc")
             {
                 // Call the EncodeTextOrDocFile function for text, .doc, or .docx files.
-                byte[] encodedData = EncodeTextOrDocFile(filePath, fileExtension);
+                fileContent = EncodeTextOrDocFile(filePath, fileExtension);
                 return "Text";
             }
 
-            else if (fileExtension == ".pdf")
+            // if AUDIO file
+            else if (fileExtension == ".mp3" || fileExtension == ".wav") // done 2
             {
-                fileContent = EncodeDocument(fileContent, fileExtension);
-                return "Document";
-            }
-
-            else if (fileExtension == ".mp3" || fileExtension == ".wav" || fileExtension == ".au" || fileExtension == ".aiff")
-            {
+                fileContent = EncodeAudio(fileContent, fileExtension);
                 return "Audio";
             }
 
-            else if (fileExtension == ".jpg" || fileExtension == ".jpeg" || fileExtension == ".png")
+            // if IMAGE file
+            else if (fileExtension == ".jpg" ||
+                     fileExtension == ".jpeg" ||
+                     fileExtension == ".png" ||
+                     fileExtension == ".gif" ||
+                     fileExtension == ".bmp" ||
+                     fileExtension == ".tiff" ||
+                     fileExtension == ".tif" ||
+                     fileExtension == ".svg" ||
+                     fileExtension == ".webp" ||
+                     fileExtension == ".ico" ||
+                     fileExtension == ".raw" ||
+                     fileExtension == ".psd" ||
+                     fileExtension == ".ai" ||
+                     fileExtension == ".eps" ||
+                     fileExtension == ".pdf" ||
+                     fileExtension == ".jfif" ||
+                     fileExtension == ".exif")                           // done 3
             {
                 fileContent = EncodeImage(fileContent, fileExtension);
                 return "Image";
             }
 
-            else if (fileExtension == ".mp4" || fileExtension == ".avi" || fileExtension == ".mov")
+            // if VIDEO file
+            else if (fileExtension == ".mp4" || fileExtension == ".avi" || fileExtension == ".mov") // done 4
             {
                 fileContent = EncodeVideo(fileContent, fileExtension);
                 return "Video";
@@ -169,8 +186,9 @@ namespace COMPort_Full_duplex_Data_Transmitter
             {
                 return "Unknown";
             }
-        }
+        } 
 
+        //
         // Encoding Method of Text File
         private byte[] EncodeTextOrDocFile(string filePath, string fileExtension)
         {
@@ -207,13 +225,25 @@ namespace COMPort_Full_duplex_Data_Transmitter
                         }
                     }
                 }
+                else if (fileExtension == ".doc")
+                {
+                    using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                    {
+                        HWPFDocument document = new HWPFDocument(fileStream);
+                        using (MemoryStream memStream = new MemoryStream())
+                        {
+                            document.Write(memStream);
+                            encodedData = memStream.ToArray();
+                        }
+                    }
+                }
                 else
                 {
                     // Handle unsupported file types or provide specific encoding logic for other extensions.
                     Console.WriteLine("Unsupported file type: " + fileExtension);
                 }
 
-                return encodedData;
+                return encodedData; // [ encoded data is being stored in this variable ]
             }
             catch (Exception ex)
             {
@@ -224,63 +254,164 @@ namespace COMPort_Full_duplex_Data_Transmitter
         }
         //End
 
-        private byte[] EncodeDocument(byte[] fileContent, string fileExtension)
+        //
+        // Encoding Method of Audio File
+        private byte[] EncodeAudio(byte[] fileContent, string fileExtension)
         {
-            if (fileExtension.ToLower() == ".pdf")
+            if (fileExtension.ToLower() == ".mp3" || fileExtension.ToLower() == ".wav")
             {
                 try
                 {
                     using (MemoryStream ms = new MemoryStream())
                     {
-                        Document doc = new Document();
-                        PdfWriter writer = PdfWriter.GetInstance(doc, ms);
-                        doc.Open();
-
-                        // Create a new page
-                        doc.NewPage();
-
-                        PdfContentByte cb = writer.DirectContent;
-                        cb.WriteBytes(fileContent);
-
-                        doc.Close();
-
+                        // Assuming the input audio is in WAV format
+                        using (WaveStream waveStream = new WaveFileReader(new MemoryStream(fileContent)))
+                        {
+                            // Create a new MP3 file
+                            using (LameMP3FileWriter mp3Writer = new LameMP3FileWriter(ms, waveStream.WaveFormat, LAMEPreset.STANDARD))
+                            {
+                                // Convert WAV to MP3
+                                waveStream.CopyTo(mp3Writer);
+                            }
+                        }
                         return ms.ToArray();
                     }
                 }
                 catch (Exception ex)
                 {
-                    // Handle any errors that may occur during PDF encoding.
-                    Console.WriteLine("Error encoding PDF: " + ex.Message);
+                    // Handle any errors that may occur during audio encoding.
+                    Console.WriteLine("Error encoding audio: " + ex.Message);
+                }
+            }
+            // If the file is not an audio file supported for encoding, just return the original content.
+            return fileContent;
+        }
+        // End
+
+        //
+        // Encoding Method of Image File
+        private byte[] EncodeImage(byte[] fileContent, string fileExtension, int qualityLevel = 100)
+        {
+            // Check for null parameters
+            if (fileContent == null)
+            {
+                Console.WriteLine("Error: Input file content is null.");
+                return null; // Or throw an ArgumentNullException.
+            }
+
+            if (IsSupportedImageFormat(fileExtension))
+            {
+                try
+                {
+                    // Load the image from the MemoryStream
+                    Image image = LoadImage(fileContent);
+
+                    // Create a new MemoryStream to store the encoded image
+                    using (MemoryStream encodedMs = EncodeImageToJpeg(image, qualityLevel))
+                    {
+                        // Return the encoded image content
+                        return encodedMs.ToArray();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error encoding image: {ex}");
+                    // Log the exception details to a logging system or log file.
+                    // Consider rethrowing the exception if it's critical or needs further handling.
+                }
+            }
+            // If the file is not an image file supported for encoding, just return the original content
+            return fileContent;
+        }
+        private Image LoadImage(byte[] fileContent)
+        {
+            using (MemoryStream ms = new MemoryStream(fileContent))
+            {
+                return Image.FromStream(ms);
+            }
+        }
+        private MemoryStream EncodeImageToJpeg(Image image, int qualityLevel)
+        {
+            using (MemoryStream encodedMs = new MemoryStream())
+            {
+                // Save the image in JPEG format with a specified quality level
+                var encoderParameters = new EncoderParameters(1);
+                encoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, qualityLevel);
+
+                // Get the JPEG codec info
+                ImageCodecInfo jpgEncoder = GetEncoder(ImageFormat.Jpeg);
+
+                // Save the image using the JPEG codec
+                image.Save(encodedMs, jpgEncoder, encoderParameters);
+
+                return encodedMs;
+            }
+        }
+        private bool IsSupportedImageFormat(string fileExtension)
+        {
+            // Check if the file extension corresponds to a supported image format
+            fileExtension = fileExtension.ToLower();
+            return fileExtension == ".jpg" ||
+                   fileExtension == ".jpeg" ||
+                   fileExtension == ".png" ||
+                   fileExtension == ".gif" ||
+                   fileExtension == ".bmp" ||
+                   fileExtension == ".tiff" ||
+                   fileExtension == ".tif" ||
+                   fileExtension == ".svg" ||
+                   fileExtension == ".webp" ||
+                   fileExtension == ".ico" ||
+                   fileExtension == ".raw" ||
+                   fileExtension == ".psd" ||
+                   fileExtension == ".ai" ||
+                   fileExtension == ".eps" ||
+                   fileExtension == ".pdf" ||
+                   fileExtension == ".jfif" ||
+                   fileExtension == ".exif";
+        }
+        private ImageCodecInfo GetEncoder(ImageFormat format)
+        {
+            // Get the codec info for a specific image format
+            ImageCodecInfo[] codecs = ImageCodecInfo.GetImageDecoders();
+            foreach (ImageCodecInfo codec in codecs)
+            {
+                if (codec.FormatID == format.Guid)
+                {
+                    return codec;
+                }
+            }
+            return null;
+        }
+        // End
+
+        //
+        // Encoding Method of Video File
+        private byte[] EncodeVideo(byte[] fileContent, string fileExtension)
+        {
+            if (fileExtension.ToLower() == ".mp4" || fileExtension.ToLower() == ".avi" || fileExtension.ToLower() == ".mov")
+            {
+                try
+                {
+                    // Convert the video content to Base64
+                    string base64Encoded = Convert.ToBase64String(fileContent);
+
+                    // Convert the Base64 string back to bytes for transmission
+                    byte[] encodedBytes = Encoding.UTF8.GetBytes(base64Encoded);
+
+                    return encodedBytes;
+                }
+                catch (Exception ex)
+                {
+                    // Handle any errors that may occur during video encoding.
+                    Console.WriteLine("Error encoding video: " + ex.Message);
                 }
             }
 
-            // If the file is not a PDF, just return the original content.
+            // If the file is not a supported video format, just return the original content.
             return fileContent;
         }
-
-        private byte[] EncodeAudio(byte[] fileContent, string fileExtension)
-        {
-            // Your audio encoding logic here.
-            // Replace this comment with your actual encoding code.
-            // You may use libraries or methods specific to audio encoding.
-            return fileContent; // For demonstration, just returning the original content.
-        }
-
-        private byte[] EncodeImage(byte[] fileContent, string fileExtension)
-        {
-            // Your image encoding logic here.
-            // Replace this comment with your actual encoding code.
-            // You may use libraries or methods specific to image encoding.
-            return fileContent; // For demonstration, just returning the original content.
-        }
-
-        private byte[] EncodeVideo(byte[] fileContent, string fileExtension)
-        {
-            // Your video encoding logic here.
-            // Replace this comment with your actual encoding code.
-            // You may use libraries or methods specific to video encoding.
-            return fileContent; // For demonstration, just returning the original content.
-        }
+        // End
+        //
 
         private async void btnSendData_Click(object sender, EventArgs e)
         {
