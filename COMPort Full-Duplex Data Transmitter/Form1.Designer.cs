@@ -109,7 +109,7 @@
             this.groupBox3.Controls.Add(this.btnOpen);
             this.groupBox3.Controls.Add(this.label6);
             this.groupBox3.Font = new System.Drawing.Font("Bahnschrift", 7.8F);
-            this.groupBox3.Location = new System.Drawing.Point(327, 93);
+            this.groupBox3.Location = new System.Drawing.Point(326, 90);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(327, 151);
             this.groupBox3.TabIndex = 1;
@@ -307,7 +307,7 @@
             this.groupBox4.ForeColor = System.Drawing.SystemColors.Desktop;
             this.groupBox4.Location = new System.Drawing.Point(35, 402);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(624, 278);
+            this.groupBox4.Size = new System.Drawing.Size(624, 284);
             this.groupBox4.TabIndex = 1;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Sender Panel";
@@ -321,9 +321,9 @@
             this.groupBox9.Controls.Add(this.cBoxChunkSize);
             this.groupBox9.Controls.Add(this.btnBrowse);
             this.groupBox9.Font = new System.Drawing.Font("Bahnschrift", 7.8F);
-            this.groupBox9.Location = new System.Drawing.Point(18, 25);
+            this.groupBox9.Location = new System.Drawing.Point(20, 22);
             this.groupBox9.Name = "groupBox9";
-            this.groupBox9.Size = new System.Drawing.Size(583, 128);
+            this.groupBox9.Size = new System.Drawing.Size(583, 136);
             this.groupBox9.TabIndex = 8;
             this.groupBox9.TabStop = false;
             // 
@@ -397,7 +397,7 @@
             this.groupBox5.Controls.Add(this.progressBar2);
             this.groupBox5.Controls.Add(this.btnSendData);
             this.groupBox5.Font = new System.Drawing.Font("Bahnschrift", 7.8F);
-            this.groupBox5.Location = new System.Drawing.Point(145, 167);
+            this.groupBox5.Location = new System.Drawing.Point(140, 174);
             this.groupBox5.Name = "groupBox5";
             this.groupBox5.Size = new System.Drawing.Size(370, 85);
             this.groupBox5.TabIndex = 6;
@@ -436,9 +436,9 @@
             // 
             this.btnReceiveData.BackColor = System.Drawing.Color.BlanchedAlmond;
             this.btnReceiveData.Font = new System.Drawing.Font("Bahnschrift", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnReceiveData.Location = new System.Drawing.Point(16, 17);
+            this.btnReceiveData.Location = new System.Drawing.Point(16, 25);
             this.btnReceiveData.Name = "btnReceiveData";
-            this.btnReceiveData.Size = new System.Drawing.Size(144, 54);
+            this.btnReceiveData.Size = new System.Drawing.Size(144, 52);
             this.btnReceiveData.TabIndex = 4;
             this.btnReceiveData.Text = "RECEIVE DATA";
             this.btnReceiveData.UseVisualStyleBackColor = false;
@@ -447,7 +447,7 @@
             // btnSaveHere
             // 
             this.btnSaveHere.BackColor = System.Drawing.Color.BlanchedAlmond;
-            this.btnSaveHere.Location = new System.Drawing.Point(20, 29);
+            this.btnSaveHere.Location = new System.Drawing.Point(19, 30);
             this.btnSaveHere.Name = "btnSaveHere";
             this.btnSaveHere.Size = new System.Drawing.Size(98, 34);
             this.btnSaveHere.TabIndex = 6;
@@ -458,7 +458,7 @@
             // ReceivedFilePathTextBox
             // 
             this.ReceivedFilePathTextBox.BackColor = System.Drawing.Color.Snow;
-            this.ReceivedFilePathTextBox.Location = new System.Drawing.Point(21, 72);
+            this.ReceivedFilePathTextBox.Location = new System.Drawing.Point(20, 74);
             this.ReceivedFilePathTextBox.Name = "ReceivedFilePathTextBox";
             this.ReceivedFilePathTextBox.Size = new System.Drawing.Size(396, 23);
             this.ReceivedFilePathTextBox.TabIndex = 7;
@@ -467,7 +467,7 @@
             // 
             this.label11.AutoSize = true;
             this.label11.Font = new System.Drawing.Font("Bahnschrift", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label11.Location = new System.Drawing.Point(12, 20);
+            this.label11.Location = new System.Drawing.Point(17, 27);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(94, 16);
             this.label11.TabIndex = 8;
@@ -477,9 +477,9 @@
             // 
             this.InputHere.BackColor = System.Drawing.Color.Snow;
             this.InputHere.Font = new System.Drawing.Font("Bahnschrift", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.InputHere.Location = new System.Drawing.Point(126, 17);
+            this.InputHere.Location = new System.Drawing.Point(128, 24);
             this.InputHere.Name = "InputHere";
-            this.InputHere.Size = new System.Drawing.Size(165, 23);
+            this.InputHere.Size = new System.Drawing.Size(187, 23);
             this.InputHere.TabIndex = 9;
             // 
             // cmbFileType
@@ -492,7 +492,7 @@
             "Text",
             "Audio",
             "Video"});
-            this.cmbFileType.Location = new System.Drawing.Point(126, 56);
+            this.cmbFileType.Location = new System.Drawing.Point(128, 60);
             this.cmbFileType.Name = "cmbFileType";
             this.cmbFileType.Size = new System.Drawing.Size(128, 24);
             this.cmbFileType.TabIndex = 10;
@@ -507,7 +507,7 @@
             this.groupBox6.Font = new System.Drawing.Font("Bahnschrift", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.groupBox6.Location = new System.Drawing.Point(691, 402);
             this.groupBox6.Name = "groupBox6";
-            this.groupBox6.Size = new System.Drawing.Size(677, 278);
+            this.groupBox6.Size = new System.Drawing.Size(677, 284);
             this.groupBox6.TabIndex = 11;
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Receiver Panel";
@@ -517,15 +517,15 @@
             this.groupBox11.BackColor = System.Drawing.SystemColors.ControlLight;
             this.groupBox11.Controls.Add(this.btnReceiveData);
             this.groupBox11.Controls.Add(this.progressBar3);
-            this.groupBox11.Location = new System.Drawing.Point(473, 122);
+            this.groupBox11.Location = new System.Drawing.Point(474, 122);
             this.groupBox11.Name = "groupBox11";
-            this.groupBox11.Size = new System.Drawing.Size(175, 130);
+            this.groupBox11.Size = new System.Drawing.Size(175, 137);
             this.groupBox11.TabIndex = 12;
             this.groupBox11.TabStop = false;
             // 
             // progressBar3
             // 
-            this.progressBar3.Location = new System.Drawing.Point(16, 82);
+            this.progressBar3.Location = new System.Drawing.Point(16, 87);
             this.progressBar3.Name = "progressBar3";
             this.progressBar3.Size = new System.Drawing.Size(144, 27);
             this.progressBar3.TabIndex = 12;
@@ -537,9 +537,9 @@
             this.groupBox10.Controls.Add(this.label11);
             this.groupBox10.Controls.Add(this.label12);
             this.groupBox10.Controls.Add(this.InputHere);
-            this.groupBox10.Location = new System.Drawing.Point(43, 27);
+            this.groupBox10.Location = new System.Drawing.Point(29, 22);
             this.groupBox10.Name = "groupBox10";
-            this.groupBox10.Size = new System.Drawing.Size(309, 91);
+            this.groupBox10.Size = new System.Drawing.Size(352, 100);
             this.groupBox10.TabIndex = 14;
             this.groupBox10.TabStop = false;
             // 
@@ -547,7 +547,7 @@
             // 
             this.label12.AutoSize = true;
             this.label12.Font = new System.Drawing.Font("Bahnschrift", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label12.Location = new System.Drawing.Point(12, 60);
+            this.label12.Location = new System.Drawing.Point(18, 62);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(63, 16);
             this.label12.TabIndex = 11;
@@ -560,7 +560,7 @@
             this.groupBox8.Font = new System.Drawing.Font("Bahnschrift", 7.8F);
             this.groupBox8.Location = new System.Drawing.Point(29, 139);
             this.groupBox8.Name = "groupBox8";
-            this.groupBox8.Size = new System.Drawing.Size(429, 113);
+            this.groupBox8.Size = new System.Drawing.Size(430, 120);
             this.groupBox8.TabIndex = 13;
             this.groupBox8.TabStop = false;
             this.groupBox8.Text = "Save Here";

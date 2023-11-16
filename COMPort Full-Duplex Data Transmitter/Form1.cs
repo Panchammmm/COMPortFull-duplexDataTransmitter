@@ -26,7 +26,6 @@ namespace COMPort_Full_duplex_Data_Transmitter
         public Form1()
         {
             InitializeComponent();
-
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -57,7 +56,6 @@ namespace COMPort_Full_duplex_Data_Transmitter
             serialPort1.StopBits = (StopBits)Enum.Parse(typeof(StopBits), cBoxStopbit.Text);
             serialPort1.Parity = (Parity)Enum.Parse(typeof(Parity), cBoxParitybit.Text);
         }
-
 
         private async void btnOpen_Click(object sender, EventArgs e)
         {
@@ -94,7 +92,6 @@ namespace COMPort_Full_duplex_Data_Transmitter
         //
         // <-- Sender Mode Start _________________________________________________________
         //
-
         private void btnBrowse_Click(object sender, EventArgs e)
         {
             textBox.Text = "";
@@ -113,9 +110,13 @@ namespace COMPort_Full_duplex_Data_Transmitter
 
                 try
                 {
+                    fileContent = File.ReadAllBytes(filePath);
+
                     if (fileContent != null)
                     {
                         // Successfully loaded the file into the byte array.
+                        textBox.Text = $"File loaded successfully. Type: {fileType}";
+                        textBox.ForeColor = Color.Green;
                     }
                 }
                 catch (Exception ex)
@@ -382,7 +383,7 @@ namespace COMPort_Full_duplex_Data_Transmitter
             }
             return null;
         }
-        // End
+        // End------------
 
         //
         // Encoding Method of Video File
@@ -406,11 +407,10 @@ namespace COMPort_Full_duplex_Data_Transmitter
                     Console.WriteLine("Error encoding video: " + ex.Message);
                 }
             }
-
             // If the file is not a supported video format, just return the original content.
             return fileContent;
         }
-        // End
+        // <--End
         //
 
         private async void btnSendData_Click(object sender, EventArgs e)
@@ -481,7 +481,7 @@ namespace COMPort_Full_duplex_Data_Transmitter
         //
 
         //
-        // <-- Start Receiver Mode
+        // <-- Start Receiver Mode -----------------------------------------------------------------------------------
         //
         private List<byte> receivedDataBuffer = new List<byte>();
         private bool receivingData = false;
@@ -564,8 +564,184 @@ namespace COMPort_Full_duplex_Data_Transmitter
             return isMatch;
         }
 
+        // <-- Start Decoding Methods ---------
+
+        // <-- Text file
+        private byte[] DecodeTextOrDocFile(byte[] receivedData, string fileExtension)
+        {
+            // Adding decoding logic for text, .doc, or .docx files.
+            if (fileExtension.Equals(".txt", StringComparison.OrdinalIgnoreCase))
+            {
+                // If the file is a text file, decode it assuming UTF-8 encoding.
+                return Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(receivedData));
+            }
+            else if (fileExtension.Equals(".docx", StringComparison.OrdinalIgnoreCase) || fileExtension.Equals(".doc", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    using (MemoryStream ms = new MemoryStream(receivedData))
+                    {
+                        XWPFDocument document = new XWPFDocument(ms);
+
+                        // Extract text from the Word document.
+                        StringBuilder textBuilder = new StringBuilder();
+                        foreach (var paragraph in document.Paragraphs)
+                        {
+                            textBuilder.AppendLine(paragraph.ParagraphText);
+                        }
+
+                        return Encoding.UTF8.GetBytes(textBuilder.ToString());
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Handle any exceptions that may occur during document decoding.
+                    Console.WriteLine("Error decoding Word document: " + ex.Message);
+                    return receivedData;
+                }
+            }
+            else
+            {
+                // Handle other file types or return the original data if the type is not recognized.
+                Console.WriteLine("Unsupported file type: " + fileExtension);
+                return receivedData;
+            }
+        }
+
+        // <-- Audio file
+        private byte[] DecodeAudio(byte[] receivedData, string fileExtension)
+        {
+            // Adding decoding logic for audio files.
+            if (fileExtension.Equals(".mp3", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    using (MemoryStream ms = new MemoryStream(receivedData))
+                    {
+                        using (Mp3FileReader mp3Reader = new Mp3FileReader(ms))
+                        {
+                            using (MemoryStream decodedMs = new MemoryStream())
+                            {
+                                // Convert MP3 to WAV
+                                WaveFileWriter.WriteWavFileToStream(decodedMs, mp3Reader);
+                                return decodedMs.ToArray();
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Handle any exceptions that may occur during audio decoding.
+                    Console.WriteLine("Error decoding MP3 audio: " + ex.Message);
+                    return receivedData; // Return original data on error
+                }
+            }
+            else if (fileExtension.Equals(".wav", StringComparison.OrdinalIgnoreCase))
+            {
+                // If the file is already a WAV file, simply return the original data.
+                return receivedData;
+            }
+            else
+            {
+                // Handle other audio file types or return the original data if the type is not recognized.
+                Console.WriteLine("Unsupported audio file type: " + fileExtension);
+                return receivedData;
+            }
+        }
+
+        // <-- Image file
+        private byte[] DecodeImage(byte[] receivedData, string fileExtension)
+        {
+            try
+            {
+                // Converting the received byte array back to an Image
+                Image receivedImage;
+
+                using (MemoryStream ms = new MemoryStream(receivedData))
+                {
+                    receivedImage = Image.FromStream(ms);
+                }
+
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    receivedImage.Save(ms, receivedImage.RawFormat);
+                    return ms.ToArray();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle any errors that may occur during image decoding.
+                Console.WriteLine("Error decoding image: " + ex.Message);
+                return null;
+            }
+        }
+
+        // <-- Video file
+        private byte[] DecodeVideo(byte[] receivedData, string fileExtension)
+        {
+            // Add decoding logic for video files.
+            // You need to implement the logic to convert bytes back to video format.
+            return receivedData;
+        }
+        // <-- End Decoding Methods -----------
+        
+        // Useing fileExtension as class level variable to use it in all methods
+        string fileExtension;
+
         private void ProcessReceivedData(byte[] receivedData)
         {
+            // Identify the file type based on its extension.
+            // You may need to adjust this logic based on your specific file-naming conventions.
+            fileExtension = Path.GetExtension(userSpecifiedFileName);
+
+            switch (fileExtension.ToLower())
+            {
+                case ".txt":
+                case ".docx":
+                case ".doc":
+                    receivedData = DecodeTextOrDocFile(receivedData, fileExtension);
+                    break;
+                case ".mp3":
+                case ".wav":
+                    receivedData = DecodeAudio(receivedData, fileExtension);
+                    break;
+                case ".jpg":
+                case ".jpeg":
+                case ".png":
+                case ".gif":
+                case ".bmp":
+                case ".tiff":
+                case ".tif":
+                case ".svg":
+                case ".webp":
+                case ".ico":
+                case ".raw":
+                case ".psd":
+                case ".ai":
+                case ".eps":
+                case ".pdf":
+                case ".jfif":
+                case ".exif":
+                    receivedData = DecodeImage(receivedData, fileExtension);
+                    break;
+                case ".mp4":
+                case ".avi":
+                case ".mov":
+                    // Add other video file extensions as needed.
+                    receivedData = DecodeVideo(receivedData, fileExtension);
+                    break;
+                // Add more cases for other file types if necessary.
+
+                default:
+                    // Handle unsupported file types or display an error message.
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        textBox.Text = "•Unsupported file type received.";
+                        textBox.ForeColor = Color.Red;
+                    });
+                    return;
+            }
+
             if (string.IsNullOrEmpty(InputHere.Text))
             {
                 this.Invoke((MethodInvoker)delegate
@@ -623,18 +799,15 @@ namespace COMPort_Full_duplex_Data_Transmitter
         // Declare selectedFolderPath at the class level
         private string selectedFolderPath;
 
-        string fileExtension;
-
         private void btnSaveHere_Click(object sender, EventArgs e)
         {
-
             // Show the folder browser dialog to allow the user to choose a directory.
             using (FolderBrowserDialog folderBrowser = new FolderBrowserDialog())
             {
                 if (folderBrowser.ShowDialog() == DialogResult.OK)
                 {
                     // Get the selected directory path.
-                    string selectedFolderPath = folderBrowser.SelectedPath;
+                    selectedFolderPath = folderBrowser.SelectedPath;
 
                     if (!string.IsNullOrEmpty(selectedFolderPath))
                     {
@@ -663,20 +836,26 @@ namespace COMPort_Full_duplex_Data_Transmitter
                                     MessageBox.Show("Unsupported file type selected.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                     return;
                             }
-
                         }
+
                         catch (UnauthorizedAccessException ex)
                         {
+                            // Log the exception
+                            Console.WriteLine($"Error: {ex}");
                             // Handle unauthorized access to the selected folder.
                             MessageBox.Show("Unauthorized access to the selected folder. Please choose a different folder.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                         catch (IOException ex)
                         {
+                            // Log the exception
+                            Console.WriteLine($"Error: {ex}");
                             // Handle other I/O-related errors.
                             MessageBox.Show($"An I/O error occurred: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                         catch (Exception ex)
                         {
+                            // Log the exception
+                            Console.WriteLine($"Error: {ex}");
                             // Handle any other unexpected errors.
                             MessageBox.Show($"An unexpected error occurred: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
@@ -684,7 +863,7 @@ namespace COMPort_Full_duplex_Data_Transmitter
                 }
             }
         }
-
+        
 
     }
 }
