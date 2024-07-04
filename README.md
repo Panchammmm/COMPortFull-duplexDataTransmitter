@@ -16,6 +16,7 @@ This project is a C# application developed in Visual Studio, designed to facilit
 
 This application provides a graphical user interface (GUI) for configuring and managing full-duplex data transmission through a COM port. The primary application of this project is in Visual Light Communication (VLC) systems.
 
+
 ![GUI Screenshot](./COMport-FullDuplex-Data-transmitter-GUI.png)
 
 ## Features
